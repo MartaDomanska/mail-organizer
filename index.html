@@ -1,15 +1,24 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mail Organizer</title>
-    <link rel="stylesheet" href="src/style.css">
-  </head>
-  <body>
-    <div id="app">
-      <p>My mail organizer</p>
-    </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gmail API Quickstart</title>
+</head>
+<body>
+  <p>Gmail API Quickstart</p>
+
+  <button id="authorize_button" onclick="handleAuthClick()">Authorize</button>
+  <button id="signout_button" onclick="handleSignoutClick()">Sign Out</button>
+
+  <pre id="content" style="white-space: pre-wrap;"></pre>
+
+  <script src="dist/bundle.js"></script> <!-- Załadowanie bundle.js, który zawiera wartości zmiennych środowiskowych -->
+  <script>
+    const CLIENT_ID = process.env.CLIENT_ID;
+    const API_KEY = process.env.API_KEY;
+
+    // reszta kodu...
+  </script>
+</body>
 </html>

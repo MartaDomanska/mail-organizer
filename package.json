@@ -9,6 +9,13 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "vite": "^6.2.0"
+    "dotenv": "^16.4.7",
+    "vite": "^6.2.0",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "http-server": "^14.1.1"
   }
 }
