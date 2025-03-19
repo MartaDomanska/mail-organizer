@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0] - 2025-03-19
+- Refactored `insertData` into `getDynamoDbData()` for retrieving configuration from DynamoDB  
+- Improved Gmail API integration: fetching messages and handling credentials from DynamoDB  
+- Implemented OpenAI message rating functionality  
+- Updated `.gitignore` to exclude `src/config.js`  
+- Fixed module import paths in `index.js`
+
 ## [1.1.0] - 2025-03-11
 - Refactored project structure into 'src' and 'datasources' folders
 - Added new datasource files: dynamoDbDatasource.js, openaiDatasource.js, gmailApiDatasource.js
