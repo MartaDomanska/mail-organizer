@@ -1,6 +1,6 @@
-import insertData from "./datasources/dynamoDbDatasource";
-import getOpenAiCredentials from "./datasources/openaiDatasource";
-import getGmailCredentials from "./datasources/gmailApiDatasource";
+import { openAiCredentials, gmailCredentials } from "./config.js";
+import { getDynamoDbData } from "./datasources/dynamoDbDatasource.js";
+import { getMessagesFromGmail } from "./datasources/gmailApiDatasource.js";
 import AWS from "aws-sdk";
 
 AWS.config.update({
@@ -9,25 +9,29 @@ AWS.config.update({
 
 const run = async () => {
   try {
-    const openAiCredentials = await getOpenAiCredentials();
-    const gmailCredentials = await getGmailCredentials();
+    const tableName = "Config";
+    const primaryKey = "current";
 
-    console.log("Dane OpenAI:", openAiCredentials);
-    console.log("Dane Gmail:", gmailCredentials);
+    const configData = await getDynamoDbData(tableName, primaryKey);
 
-    const params = {
-      TableName: "Config",
-      Item: {
-        current: "1",
-        OpenAi: openAiCredentials,
-        Gmail: gmailCredentials,
-      },
-    };
+    console.log("Pobrane dane z DynamoDB:", configData);
 
-    const data = await insertData(params);
-    console.log("Dane zostały wstawione:", data);
+    const openAiCredentialsFromDb = configData.OpenAi || openAiCredentials;
+    const gmailCredentialsFromDb = configData.Gmail || gmailCredentials;
+
+    console.log("Dane OpenAI:", openAiCredentialsFromDb);
+    console.log("Dane Gmail:", gmailCredentialsFromDb);
+
+    const messages = await getMessagesFromGmail();
+
+    if (messages.length > 0) {
+      console.log(`Znaleziono ${messages.length} wiadomości w Gmailu!`);
+      console.log("Wiadomości:", messages);
+    } else {
+      console.log("Brak nowych wiadomości w Gmailu.");
+    }
   } catch (error) {
-    console.error("Błąd:", error);
+    console.error("Błąd:", error.message);
   }
 };
 

@@ -9,9 +9,10 @@
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.758.0",
     "aws-sdk": "^2.1692.0",
-    "dotenv": "^16.0.0"
+    "dotenv": "^16.0.0",
+    "googleapis": "^146.0.0"
   },
-  "type": "module",  
+  "type": "module",
   "author": "",
   "license": "ISC"
 }
