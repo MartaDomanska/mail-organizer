@@ -1,11 +1,7 @@
 import { openAiCredentials, gmailCredentials } from "./config.js";
+
 import { getDynamoDbData } from "./datasources/dynamoDbDatasource.js";
 import { getMessagesFromGmail } from "./datasources/gmailApiDatasource.js";
-import AWS from "aws-sdk";
-
-AWS.config.update({
-  region: "eu-central-1",
-});
 
 const run = async () => {
   try {
