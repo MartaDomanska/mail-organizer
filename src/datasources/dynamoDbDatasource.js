@@ -36,11 +36,11 @@ const getGmailTokens = async () => {
   try {
     const configData = await getDynamoDbData("Config", "current");
     if (!configData.Gmail) {
-      throw new Error("Brak konfiguracji Gmail w bazie.");
+      throw new Error("No Gmail configuration in the base.");
     }
     return configData.Gmail;
   } catch (error) {
-    console.error("Błąd przy pobieraniu tokenów Gmail:", error);
+    console.error("Error when downloading Gmail tokens:", error);
     throw error;
   }
 };

@@ -12,23 +12,35 @@ const getGmailCredentials = async () => {
 
   try {
     const data = await getDynamoDbData(tableName, configKey);
-    console.log("Pobrane dane z DynamoDB:", data);
+    console.log("Retrieved data from DynamoDB:", data);
 
-    const { GMAIL_ACCESS_TOKEN, GMAIL_REFRESH_TOKEN } = data.Gmail;
+    const {
+      GMAIL_ACCESS_KEY,     
+      GMAIL_SECRET_KEY,     
+      GMAIL_ACCESS_TOKEN,
+      GMAIL_REFRESH_TOKEN,
+    } = data.Gmail;
+
+    if (!GMAIL_ACCESS_KEY || !GMAIL_SECRET_KEY) {
+      throw new Error("No clientId or clientSecret in the Gmail configuration.");
+    }
 
     if (!GMAIL_ACCESS_TOKEN || !GMAIL_REFRESH_TOKEN) {
-      throw new Error("Brak tokenów w odpowiedzi z DynamoDB");
+      throw new Error("No tokens in response from DynamoDB");
     }
 
     return {
+      clientId: GMAIL_ACCESS_KEY,
+      clientSecret: GMAIL_SECRET_KEY,
       accessToken: GMAIL_ACCESS_TOKEN,
       refreshToken: GMAIL_REFRESH_TOKEN,
     };
   } catch (err) {
-    console.error("Błąd podczas pobierania danych logowania do Gmaila:", err);
+    console.error("Error when downloading Gmail login details:", err);
     throw err;
   }
 };
+
 
 /**
  * Function for authorization in the Gmail API.
@@ -112,7 +124,7 @@ const getMessagesFromGmail = async (label = "INBOX") => {
 
     return res.data.messages || [];
   } catch (err) {
-    console.error("Błąd podczas pobierania wiadomości:", err);
+    console.error("Error during message download:", err);
     throw err;
   }
 };
@@ -136,10 +148,10 @@ const moveMessageToFolder = async (messageId, newLabelId) => {
     });
 
     console.log(
-      `Wiadomość ${messageId} została przeniesiona do folderu ${newLabelId}`
+      `Message ${messageId} has been moved to the folder ${newLabelId}`
     );
   } catch (err) {
-    console.error("Błąd podczas przenoszenia wiadomości:", err);
+    console.error("Error during message transfer:", err);
     throw err;
   }
 };
@@ -158,7 +170,7 @@ const getLabels = async () => {
 
     return res.data.labels || [];
   } catch (err) {
-    console.error("Błąd podczas pobierania etykiet:", err);
+    console.error("Error while downloading labels:", err);
     throw err;
   }
 };
