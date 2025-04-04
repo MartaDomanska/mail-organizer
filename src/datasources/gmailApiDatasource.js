@@ -156,28 +156,8 @@ const moveMessageToFolder = async (messageId, newLabelId) => {
   }
 };
 
-/**
- * Function to retrieve available labels (folders) from your Gmail account.
- * @returns {Promise<Array>}
- */
-const getLabels = async () => {
-  const gmail = await authorizeGmail();
-
-  try {
-    const res = await gmail.users.labels.list({
-      userId: "me",
-    });
-
-    return res.data.labels || [];
-  } catch (err) {
-    console.error("Error while downloading labels:", err);
-    throw err;
-  }
-};
-
 export {
   getGmailCredentials,
   getMessagesFromGmail,
   moveMessageToFolder,
-  getLabels,
 };
