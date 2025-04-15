@@ -1,4 +1,5 @@
-config.js
+# Ignore config file
+src/config.js
 
 # Node.js
 node_modules/
@@ -17,9 +18,6 @@ coverage/
 
 # Logi
 *.log
-
-# Environment variables
-.env
 
 # OS generated files
 .DS_Store
