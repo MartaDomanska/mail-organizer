@@ -52,7 +52,17 @@ const authorizeGmail = async () => {
   try {
     await oauth2Client.getAccessToken();
 
-    return google.gmail({ version: "v1", auth: oauth2Client });
+    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+    const res = await gmail.users.messages.list({
+      userId: "me",
+      q: "in:anywhere is:unread",
+      maxResults: 10,
+    });
+
+    const messages = res.data.messages || [];
+
+    return messages;
   } catch (err) {
     console.error("Failed to authorize Gmail API:", err);
     throw err;
