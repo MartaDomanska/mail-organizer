@@ -63,12 +63,12 @@ const authorizeGmail = async () => {
     const messages = res.data.messages || [];
 
     /**
-     * Get the subject of the message
+     * Get the subject, sender of the message
      * @param {Object} message
      * @returns {Object}
      */
 
-    const messagesWithSubject = await Promise.all(
+    const messagesWithDetails = await Promise.all(
       messages.map(async (message) => {
         const res = await gmail.users.messages.get({
           userId: "me",
@@ -76,15 +76,20 @@ const authorizeGmail = async () => {
         });
 
         const headers = res.data.payload.headers || [];
+        
         const subject =
           headers.find((header) => header.name === "Subject")?.value ||
           "No subject";
 
-        return { ...message, subject };
+        const sender =
+          headers.find((header) => header.name === "From")?.value ||
+          "No sender";
+
+        return { ...message, subject, sender };
       })
     );
 
-    return messagesWithSubject;
+    return messagesWithDetails;
   } catch (err) {
     console.error("Failed to authorize Gmail API:", err);
     throw err;
