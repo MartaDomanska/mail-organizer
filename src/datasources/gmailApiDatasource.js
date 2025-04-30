@@ -56,38 +56,44 @@ const authorizeGmail = async () => {
 
     const res = await gmail.users.messages.list({
       userId: "me",
+      //TODO: czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci
       q: "in:anywhere is:unread",
       // maxResults: 10,
     });
 
     const messages = res.data.messages || [];
 
-    /**
-     * Get the subject, sender of the message
-     * @param {Object} message
-     * @returns {Object}
-     */
+    // const testMessage = await gmail.users.messages.get({
+    //   userId: "me",
+    //   id: "19670e68c409c491",
+    //   format: "full",
+    // });
 
-    const messagesWithDetails = await Promise.all(
-      messages.map(async (message) => {
-        const res = await gmail.users.messages.get({
-          userId: "me",
-          id: message.id,
-        });
+    // const dataObject = Buffer.from(testMessage.data.payload.parts[0].body.data,
+    //   "base64").toString("utf-8")
 
-        const headers = res.data.payload.headers || [];
-        
-        const subject =
-          headers.find((header) => header.name === "Subject")?.value ||
-          "No subject";
+    // console.log("email response", dataObject);
 
-        const sender =
-          headers.find((header) => header.name === "From")?.value ||
-          "No sender";
+    const promises = messages.map(async (message) => {
+      const res = await gmail.users.messages.get({
+        userId: "me",
+        id: message.id,
+        format: "full",
+      });
 
-        return { ...message, subject, sender };
-      })
-    );
+      const headers = res.data.payload.headers || [];
+
+      const subject = headers.find((header) => header.name === "Subject")?.value || "No subject";
+      const sender = headers.find((header) => header.name === "From")?.value || "No sender";
+
+      const contentMessages = res.data.payload.parts[0].body.data || "";
+
+      const dataObject = Buffer.from(contentMessages, "base64").toString("utf-8")
+
+      return { ...message, subject, sender, body: dataObject};
+    });
+
+    const messagesWithDetails = await Promise.all(promises);
 
     return messagesWithDetails;
   } catch (err) {
