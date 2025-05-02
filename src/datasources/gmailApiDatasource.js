@@ -54,50 +54,45 @@ const authorizeGmail = async () => {
 
     const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
+    //TODO: 1) czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci.
+    //      2) ustawienie dynamiecznego pobierania wiadomości z zakresu ostatniego tygodnia.
     const res = await gmail.users.messages.list({
       userId: "me",
-      //TODO: czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci
-      q: "in:anywhere is:unread",
-      // maxResults: 10,
+      q: "in:anywhere is:unread after:2025/04/25 before:2025/05/02"
     });
 
     const messages = res.data.messages || [];
-
-    // const testMessage = await gmail.users.messages.get({
-    //   userId: "me",
-    //   id: "19670e68c409c491",
-    //   format: "full",
-    // });
-
-    // const dataObject = Buffer.from(testMessage.data.payload.parts[0].body.data,
-    //   "base64").toString("utf-8")
-
-    // console.log("email response", dataObject);
 
     const promises = messages.map(async (message) => {
       const res = await gmail.users.messages.get({
         userId: "me",
         id: message.id,
-        format: "full",
+        format: "full"
       });
 
       const headers = res.data.payload.headers || [];
+      // TODO: zastanowic sie kiedy wiadomosc brac pod uwage - tj. w przypadku braku tytulu oraz tresci wiadomosci (ew. wziac pod folder - "bez kategorii").
+      const subject =
+        headers.find((header) => header.name === "Subject")?.value ||
+        "No subject";
+      const sender =
+        headers.find((header) => header.name === "From")?.value || "No sender";
 
-      const subject = headers.find((header) => header.name === "Subject")?.value || "No subject";
-      const sender = headers.find((header) => header.name === "From")?.value || "No sender";
-
+      // TODO: w body pojawia sie tresc z '\r\n' - zastanowic sie czy to zostawic
       const contentMessages = res.data.payload.parts[0].body.data || "";
 
-      const dataObject = Buffer.from(contentMessages, "base64").toString("utf-8")
+      const dataObject = Buffer.from(contentMessages, "base64").toString(
+        "utf-8"
+      );
 
-      return { ...message, subject, sender, body: dataObject};
+      return { ...message, subject, sender, body: dataObject };
     });
 
     const messagesWithDetails = await Promise.all(promises);
 
     return messagesWithDetails;
   } catch (err) {
-    console.error("Failed to authorize Gmail API:", err);
+    console.error("Gmail error:", err);
     throw err;
   }
 };
