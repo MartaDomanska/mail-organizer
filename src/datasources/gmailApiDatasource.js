@@ -10,28 +10,21 @@ const getGmailCredentials = async () => {
   const tableName = "Config";
   const configKey = "current";
 
-  try {
-    const data = await getDynamoDbData(tableName, configKey);
-    console.log("Retrieved data from DynamoDB:", data);
+  const data = await getDynamoDbData(tableName, configKey);
+  console.log("Retrieved data from DynamoDB:", data);
 
-    const { GMAIL_ACCESS_KEY, GMAIL_SECRET_KEY, GMAIL_REFRESH_TOKEN } =
-      data.Gmail;
+  const { GMAIL_ACCESS_KEY, GMAIL_SECRET_KEY, GMAIL_REFRESH_TOKEN } =
+    data.Gmail;
 
-    if (!GMAIL_ACCESS_KEY || !GMAIL_SECRET_KEY || !GMAIL_REFRESH_TOKEN) {
-      throw new Error(
-        "No clientId or clientSecret in the Gmail configuration."
-      );
-    }
-
-    return {
-      clientId: GMAIL_ACCESS_KEY,
-      clientSecret: GMAIL_SECRET_KEY,
-      refreshToken: GMAIL_REFRESH_TOKEN,
-    };
-  } catch (err) {
-    console.error("Error when downloading Gmail login details:", err);
-    throw err;
+  if (!GMAIL_ACCESS_KEY || !GMAIL_SECRET_KEY || !GMAIL_REFRESH_TOKEN) {
+    throw new Error("No clientId or clientSecret in the Gmail configuration.");
   }
+
+  return {
+    clientId: GMAIL_ACCESS_KEY,
+    clientSecret: GMAIL_SECRET_KEY,
+    refreshToken: GMAIL_REFRESH_TOKEN,
+  };
 };
 
 /**
@@ -49,24 +42,45 @@ const authorizeGmail = async () => {
 
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
-  try {
-    await oauth2Client.getAccessToken();
+  await oauth2Client.getAccessToken();
 
-    const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-    const res = await gmail.users.messages.list({
+  //TODO: 1) czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci.
+  //      2) ustawienie dynamiecznego pobierania wiadomości z zakresu ostatniego tygodnia.
+  const res = await gmail.users.messages.list({
+    userId: "me",
+    q: "in:anywhere is:unread after:2025/04/25 before:2025/05/02",
+  });
+
+  const messages = res.data.messages || [];
+
+  const promises = messages.map(async (message) => {
+    const res = await gmail.users.messages.get({
       userId: "me",
-      q: "in:anywhere is:unread",
-      maxResults: 10,
+      id: message.id,
+      format: "full",
     });
 
-    const messages = res.data.messages || [];
+    const headers = res.data.payload.headers || [];
+    // TODO: zastanowic sie kiedy wiadomosc brac pod uwage - tj. w przypadku braku tytulu oraz tresci wiadomosci (ew. wziac pod folder - "bez kategorii").
+    const subject =
+      headers.find((header) => header.name === "Subject")?.value ||
+      "No subject";
+    const sender =
+      headers.find((header) => header.name === "From")?.value || "No sender";
 
-    return messages;
-  } catch (err) {
-    console.error("Failed to authorize Gmail API:", err);
-    throw err;
-  }
+    // TODO: w body pojawia sie tresc z '\r\n' - zastanowic sie czy to zostawic
+    const contentMessages = res.data.payload.parts[0].body.data || "";
+
+    const dataObject = Buffer.from(contentMessages, "base64").toString("utf-8");
+
+    return { ...message, subject, sender, body: dataObject };
+  });
+
+  const messagesWithDetails = await Promise.all(promises);
+
+  return messagesWithDetails;
 };
 
 export { getGmailCredentials, authorizeGmail };

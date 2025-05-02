@@ -17,19 +17,11 @@ const getDynamoDbData = async (tableName, primaryKey) => {
     },
   };
 
-  console.info(params);
-
-  try {
-    const data = await docClient.get(params).promise();
-    if (!data.Item) {
-      throw new Error(`No data found for ${primaryKey}`);
-    }
-    console.info(data.Item);
-    return data.Item;
-  } catch (err) {
-    console.error("Error while retrieving data from DynamoDB:", err);
-    throw err;
+  const data = await docClient.get(params).promise();
+  if (!data.Item) {
+    throw new Error(`No data found for ${primaryKey}`);
   }
+  return data.Item;
 };
 
 export { getDynamoDbData };
