@@ -1,7 +1,10 @@
 import { authorizeGmail } from "./datasources/gmailApiDatasource.js";
+import { askQuestion } from "./datasources/openAI.js";
 
 const run = async () => {
   try {
+    await askQuestion();
+
     const messages = await authorizeGmail();
 
     if (messages.length > 0) {
