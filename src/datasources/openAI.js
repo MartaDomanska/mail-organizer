@@ -5,12 +5,17 @@ const openai = new OpenAI({
   apiKey: openAiConfig.apiKey,
 });
 
-export const askQuestion = async () => {
+export const categoryMessages = async (emailText) => {
+  const prompt = `Skategoryzuj wiadomość ${emailText} do jednej z kategorii: Praca, Rodzina, Inne. Zwróć tylko jedną z tych trzech kategorii.`;
+
   const response = await openai.chat.completions.create({
     model: "gpt-4",
-    messages: [{ role: "user", content: "Ile jest państw na świecie?" }],
+    messages: [{ role: "user", content: prompt }],
   });
-  console.log("Państw na świecie jest:", response.choices[0].message.content);
+
+  const category = response.choices[0].message.content.trim();
+  console.log(category);
+  return category;
 };
 
 export default openai;
