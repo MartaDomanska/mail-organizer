@@ -31,7 +31,7 @@ const getGmailCredentials = async () => {
  * Function for authorization in the Gmail API.
  * @returns {Promise<Object>}
  */
-const authorizeGmail = async () => {
+const getMessages = async () => {
   const { clientId, clientSecret, refreshToken } = await getGmailCredentials();
 
   const oauth2Client = new google.auth.OAuth2(
@@ -50,7 +50,7 @@ const authorizeGmail = async () => {
   //      2) ustawienie dynamiecznego pobierania wiadomości z zakresu ostatniego tygodnia.
   const res = await gmail.users.messages.list({
     userId: "me",
-    q: "in:anywhere is:unread after:2025/04/25 before:2025/05/02",
+    q: "in:anywhere is:unread after:2025/05/05",
   });
 
   const messages = res.data.messages || [];
@@ -80,7 +80,9 @@ const authorizeGmail = async () => {
 
   const messagesWithDetails = await Promise.all(promises);
 
+
+
   return messagesWithDetails;
 };
 
-export { getGmailCredentials, authorizeGmail };
+export { getGmailCredentials, getMessages };
