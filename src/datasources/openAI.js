@@ -6,7 +6,8 @@ const openai = new OpenAI({
 });
 
 export const categoryMessages = async (emailText) => {
-  const prompt = `Skategoryzuj wiadomość ${emailText} do jednej z kategorii: Praca, Rodzina, Inne. Zwróć tylko jedną z tych trzech kategorii.`;
+  const prompt = `Skategoryzuj wiadomość ${emailText} do jednej z kategorii: Praca, Rodzina, Inne. 
+  Zwróć tylko jedną z tych trzech kategorii.`;
 
   const response = await openai.chat.completions.create({
     model: "gpt-4",
@@ -14,7 +15,6 @@ export const categoryMessages = async (emailText) => {
   });
 
   const category = response.choices[0].message.content.trim();
-  console.log(category);
   return category;
 };
 

@@ -31,7 +31,7 @@ const getGmailCredentials = async () => {
  * Function for authorization in the Gmail API.
  * @returns {Promise<Object>}
  */
-const authorizeGmail = async () => {
+const getMessages = async () => {
   const { clientId, clientSecret, refreshToken } = await getGmailCredentials();
 
   const oauth2Client = new google.auth.OAuth2(
@@ -85,4 +85,4 @@ const authorizeGmail = async () => {
   return messagesWithDetails;
 };
 
-export { getGmailCredentials, authorizeGmail };
+export { getGmailCredentials, getMessages };
