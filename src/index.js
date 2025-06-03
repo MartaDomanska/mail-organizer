@@ -30,7 +30,7 @@ const run = async () => {
       console.log("Brak nowych wiadomości w Gmailu.");
     }
   } catch (error) {
-    console.error("Błąd:", error.message);
+    console.error("Błąd:", error);
   }
 };
 

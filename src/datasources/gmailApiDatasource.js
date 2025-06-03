@@ -55,34 +55,50 @@ const getMessages = async () => {
 
   const messages = res.data.messages || [];
 
-  const promises = messages.map(async (message) => {
-    const res = await gmail.users.messages.get({
-      userId: "me",
-      id: message.id,
-      format: "full",
-    });
+  const promises = messages.map((message) => {
+    return gmail.users.messages
+      .get({
+        userId: "me",
+        id: message.id,
+        format: "full",
+      })
+      .then((res) => {
+        const payload = res.data.payload;
+        if (!payload) throw new Error("Brak payload w wiadomości");
 
-    const headers = res.data.payload.headers || [];
-    // TODO: zastanowic sie kiedy wiadomosc brac pod uwage - tj. w przypadku braku tytulu oraz tresci wiadomosci (ew. wziac pod folder - "bez kategorii").
-    const subject =
-      headers.find((header) => header.name === "Subject")?.value ||
-      "No subject";
-    const sender =
-      headers.find((header) => header.name === "From")?.value || "No sender";
+        // TODO: zastanowic sie kiedy wiadomosc brac pod uwage - tj. w przypadku braku tytulu oraz tresci wiadomosci (ew. wziac pod folder - "bez kategorii").
+        const headers = payload.headers || [];
+        const subject =
+          headers.find((header) => header.name === "Subject")?.value ||
+          "No subject";
+        const sender =
+          headers.find((header) => header.name === "From")?.value ||
+          "No sender";
 
-    // TODO: w body pojawia sie tresc z '\r\n' - zastanowic sie czy to zostawic
-    const contentMessages = res.data.payload.parts[0].body.data || "";
+        // TODO: w body pojawia sie tresc z '\r\n' - zastanowic sie czy to zostawic
+        let bodyData = "";
 
-    const dataObject = Buffer.from(contentMessages, "base64").toString("utf-8");
+        if (payload.parts && payload.parts[0]?.body?.data) {
+          bodyData = payload.parts[0].body.data;
+        } else if (payload.body?.data) {
+          bodyData = payload.body.data;
+        }
 
-    return { ...message, subject, sender, body: dataObject };
+        const dataObject = Buffer.from(bodyData, "base64").toString(
+          "utf-8"
+        );
+
+        return { ...message, subject, sender, body: dataObject };
+      });
   });
 
-  const messagesWithDetails = await Promise.all(promises);
+  const results = await Promise.allSettled(promises);
 
-
-
-  return messagesWithDetails;
+  const successes = results
+    .filter((r) => r.status === "fulfilled")
+    .map((r) => r.value);
+  
+  return successes;  
 };
 
 export { getGmailCredentials, getMessages };
