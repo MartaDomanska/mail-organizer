@@ -46,11 +46,12 @@ const getMessages = async () => {
 
   const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
-  //TODO: 1) czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci.
-  //      2) ustawienie dynamiecznego pobierania wiadomości z zakresu ostatniego tygodnia.
+  //TODO: czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci.
+ const oneWeekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
+
   const res = await gmail.users.messages.list({
     userId: "me",
-    q: "in:anywhere is:unread after:2025/05/05",
+    q: `in:anywhere is:unread after:${oneWeekAgo}`,
   });
 
   const messages = res.data.messages || [];
@@ -84,9 +85,7 @@ const getMessages = async () => {
           bodyData = payload.body.data;
         }
 
-        const dataObject = Buffer.from(bodyData, "base64").toString(
-          "utf-8"
-        );
+        const dataObject = Buffer.from(bodyData, "base64").toString("utf-8");
 
         return { ...message, subject, sender, body: dataObject };
       });
@@ -97,8 +96,8 @@ const getMessages = async () => {
   const successes = results
     .filter((r) => r.status === "fulfilled")
     .map((r) => r.value);
-  
-  return successes;  
+
+  return successes;
 };
 
 export { getGmailCredentials, getMessages };
