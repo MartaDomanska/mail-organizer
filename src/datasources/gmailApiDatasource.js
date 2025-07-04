@@ -11,13 +11,13 @@ const getGmailCredentials = async () => {
   const configKey = "current";
 
   const data = await getDynamoDbData(tableName, configKey);
-  console.log("Retrieved data from DynamoDB:", data);
+  if (!data?.Gmail) throw new Error("Brak konfiguracji Gmail");
 
   const { GMAIL_ACCESS_KEY, GMAIL_SECRET_KEY, GMAIL_REFRESH_TOKEN } =
     data.Gmail;
 
   if (!GMAIL_ACCESS_KEY || !GMAIL_SECRET_KEY || !GMAIL_REFRESH_TOKEN) {
-    throw new Error("No clientId or clientSecret in the Gmail configuration.");
+    throw new Error("Brak danych uwierzytelniających Gmaila.");
   }
 
   return {
@@ -31,23 +31,21 @@ const getGmailCredentials = async () => {
  * Function for authorization in the Gmail API.
  * @returns {Promise<Object>}
  */
-const getMessages = async () => {
+const getGmailClient = async () => {
   const { clientId, clientSecret, refreshToken } = await getGmailCredentials();
 
-  const oauth2Client = new google.auth.OAuth2(
-    clientId,
-    clientSecret,
-    "https://developers.google.com/oauthplayground"
-  );
-
+  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
   oauth2Client.setCredentials({ refresh_token: refreshToken });
 
   await oauth2Client.getAccessToken();
 
-  const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+  return google.gmail({ version: "v1", auth: oauth2Client });
+};
 
-  //TODO: czy tylko maja byc brane pod uwage nieprzeczytane wiadomosci.
- const oneWeekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
+const getMessages = async () => {
+  const gmail = await getGmailClient();
+
+  const oneWeekAgo = Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60;
 
   const res = await gmail.users.messages.list({
     userId: "me",
@@ -100,4 +98,29 @@ const getMessages = async () => {
   return successes;
 };
 
-export { getGmailCredentials, getMessages };
+// const labelsRes = await gmail.users.labels.list({ userId: "me" });
+const getLabels = async () => {
+  const gmail = await getGmailClient();
+  const res = await gmail.users.labels.list({ userId: "me" });
+  return res.data.labels || [];
+};
+
+/**
+ * Moves message to a given label and removes it from INBOX
+ * @param {string} messageId
+ * @param {string} labelId
+ */
+
+const moveMessageToLabel = async (messageId, labelId) => {
+  const gmail = await getGmailClient();
+  await gmail.users.messages.modify({
+    userId: "me",
+    id: messageId,
+    requestBody: {
+      addLabelIds: [labelId],
+      removeLabelIds: ["INBOX"],
+    },
+  });
+};
+
+export { getGmailCredentials, getGmailClient, getMessages,   getLabels, moveMessageToLabel };
